@@ -1,58 +1,42 @@
 ```
-# Dependencies
-node_modules/
-.venv/
-venv/
-__pycache__/
-.mypy_cache/
-.pytest_cache/
-target/
-.gradle/
+# Excel export files
+*.xlsx
 
-# Compiled files
+# PDF files
+*.pdf
+
+# Python compiled files
 *.pyc
-*.class
-*.o
-*.exe
-*.dll
-*.so
-*.a
-*.obj
-*.out
+__pycache__/
 
-# Build artifacts
-dist/
-build/
+# Dependencies
+venv/
+.venv/
+.env
+.env.local
 
 # Logs
 *.log
 
-# Environment
-.env
-.env.local
-*.env.*
-
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
 
-# System
-.DS_Store
-Thumbs.db
+# Build artifacts
+dist/
+build/
+target/
 
-# Coverage
+# Coverage reports
 coverage/
 htmlcov/
 .coverage
 
-# Rust specific (from Cargo.toml)
-Cargo.lock
-target/
+# Testing
+.pytest_cache/
+.mypy_cache/
 
-# Python specific
-*.pyc
-__pycache__/
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
