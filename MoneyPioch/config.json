@@ -1,0 +1,42 @@
+{
+  "api_keys": {
+    "football_data": "YOUR_FOOTBALL_DATA_API_KEY",
+    "betting_odds": "YOUR_BETTING_ODDS_API_KEY"
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "money_pioch",
+    "user": "postgres",
+    "password": "password"
+  },
+  "betting": {
+    "max_stake_percentage": 5.0,
+    "min_confidence": 0.65,
+    "max_exposure": 10.0,
+    "default_bankroll": 1000.0
+  },
+  "data_sources": {
+    "football": {
+      "enabled": true,
+      "api_url": "https://api.football-data.org/v4",
+      "timeout": 30
+    },
+    "basketball": {
+      "enabled": true,
+      "api_url": "https://api.basketball-data.org",
+      "timeout": 30
+    },
+    "tennis": {
+      "enabled": true,
+      "api_url": "https://api.tennis-data.org",
+      "timeout": 30
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "money_pioch.log",
+    "max_size": "10MB",
+    "backup_count": 5
+  }
+}
