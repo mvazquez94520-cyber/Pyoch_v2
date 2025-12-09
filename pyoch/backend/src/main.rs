@@ -2,6 +2,7 @@ mod models;
 mod ai_engine;
 mod rule_engine;
 mod utils;
+mod config;
 
 use actix_web::{web, App, HttpServer, HttpResponse, Responder, middleware::Logger};
 use serde_json::json;
