@@ -32,10 +32,19 @@
             border-radius: 4px;
             font-size: 16px;
         }
+        .keyword-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
         .button-group {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         button { 
             padding: 12px 24px; 
@@ -45,6 +54,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            white-space: nowrap;
         }
         button:hover {
             background-color: #0056b3;
@@ -110,6 +120,22 @@
             background-color: #e8f5e9;
             color: #2e7d32;
         }
+        .prospection-section {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .prospection-section.active {
+            display: block;
+        }
+        .export-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
@@ -123,18 +149,31 @@
             </select>
         </div>
         
-        <textarea id="prompt" placeholder="Décrivez votre besoin métier..."></textarea>
+        <div id="standardSection">
+            <textarea id="prompt" placeholder="Décrivez votre besoin métier..."></textarea>
+            
+            <div class="button-group">
+                <button id="sendBtn" onclick="sendPrompt()">Envoyer</button>
+                <button id="clearBtn" onclick="clearResponse()">Effacer</button>
+            </div>
+        </div>
         
-        <div class="button-group">
-            <button id="sendBtn" onclick="sendPrompt()">Envoyer</button>
-            <button id="clearBtn" onclick="clearResponse()">Effacer</button>
+        <div id="prospectionSection" class="prospection-section">
+            <h3>Recherche de Prospects B2B</h3>
+            <label for="keywords">Mots-clés pour la recherche:</label>
+            <input type="text" id="keywords" class="keyword-input" placeholder="Ex: intelligence artificielle, GPU, machine learning">
+            
+            <div class="button-group">
+                <button id="searchBtn" onclick="searchCompanies()">Rechercher les entreprises</button>
+                <button id="exportBtn" onclick="exportCompanies()">Exporter vers Excel</button>
+            </div>
         </div>
         
         <div id="response"></div>
         
         <div class="feedback-section">
             <h3>Feedback</h3>
-            <p>Évaluez la pertinence des règles générées:</p>
+            <p>Évaluez la pertinence des résultats:</p>
             <button onclick="submitFeedback(true)">Pertinent</button>
             <button onclick="submitFeedback(false)">Non pertinent</button>
         </div>
@@ -144,7 +183,17 @@
         // Load application types on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadAppTypes();
+            setupAppTypeListener();
         });
+        
+        function setupAppTypeListener() {
+            const appTypeSelect = document.getElementById('appType');
+            appTypeSelect.addEventListener('change', function() {
+                const isProspection = this.value === 'prospection_b2b';
+                document.getElementById('standardSection').style.display = isProspection ? 'none' : 'block';
+                document.getElementById('prospectionSection').classList.toggle('active', isProspection);
+            });
+        }
         
         async function loadAppTypes() {
             try {
@@ -204,6 +253,87 @@
                 // Reset button state
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'Envoyer';
+            }
+        }
+        
+        async function searchCompanies() {
+            const keywordsInput = document.getElementById('keywords').value;
+            const responseDiv = document.getElementById('response');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            if (!keywordsInput.trim()) {
+                alert('Veuillez entrer des mots-clés pour la recherche');
+                return;
+            }
+            
+            // Parse keywords (split by comma or space)
+            const keywords = keywordsInput.split(/[,\s]+/).filter(k => k.trim());
+            
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<div class="loading"></div>Recherche en cours...';
+            responseDiv.textContent = 'Recherche des entreprises en cours...';
+            
+            try {
+                const response = await fetch('http://localhost:3030/prospection/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keywords: keywords }),
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    responseDiv.innerHTML = `Erreur: ${result.error}`;
+                    responseDiv.className = 'response error';
+                } else {
+                    responseDiv.textContent = JSON.stringify(result, null, 2);
+                    responseDiv.className = 'response';
+                }
+            } catch (error) {
+                responseDiv.textContent = `Erreur de connexion: ${error.message}`;
+                responseDiv.className = 'response error';
+            } finally {
+                // Reset button state
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Rechercher les entreprises';
+            }
+        }
+        
+        async function exportCompanies() {
+            const responseDiv = document.getElementById('response');
+            const exportBtn = document.getElementById('exportBtn');
+            
+            // Show loading state
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '<div class="loading"></div>Export en cours...';
+            responseDiv.textContent = 'Export des entreprises vers Excel en cours...';
+            
+            try {
+                const response = await fetch('http://localhost:3030/prospection/export', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    responseDiv.innerHTML = `Erreur: ${result.error}`;
+                    responseDiv.className = 'response error';
+                } else {
+                    responseDiv.textContent = JSON.stringify(result, null, 2);
+                    responseDiv.className = 'response success';
+                    
+                    // Show download message
+                    alert(`Export terminé: ${result.companies_exported} entreprises exportées dans ${result.filename}`);
+                }
+            } catch (error) {
+                responseDiv.textContent = `Erreur de connexion: ${error.message}`;
+                responseDiv.className = 'response error';
+            } finally {
+                // Reset button state
+                exportBtn.disabled = false;
+                exportBtn.textContent = 'Exporter vers Excel';
             }
         }
         

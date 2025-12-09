@@ -1,13 +1,14 @@
 mod models;
 mod ai_engine;
 mod rule_engine;
-mod utils;
+mod templates;
 
 use actix_web::{web, App, HttpServer, HttpResponse, Responder, middleware::Logger};
 use serde_json::json;
 use crate::models::{PromptRequest, EvaluationResponse};
 use crate::ai_engine::AIEngine;
 use crate::rule_engine::RuleEngine;
+use crate::templates;
 use std::sync::{Arc, Mutex};
 use env_logger;
 
@@ -69,7 +70,8 @@ async fn get_application_types() -> impl Responder {
         {"type": "billing", "name": "Billing System", "description": "Invoice and billing management"},
         {"type": "project", "name": "Project Management", "description": "Project tracking and management"},
         {"type": "inventory", "name": "Inventory Management", "description": "Stock and inventory tracking"},
-        {"type": "hr", "name": "HR Management", "description": "Human resources management"}
+        {"type": "hr", "name": "HR Management", "description": "Human resources management"},
+        {"type": "prospection_b2b", "name": "Prospection B2B GPU", "description": "Application de prospection B2B pour identifier les entreprises nécessitant des workstations GPU"}
     ]))
 }
 
@@ -120,6 +122,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(app_state.clone())
             .wrap(Logger::default())
+            .configure(templates::configure_routes)
             .route("/health", web::get().to(health_check))
             .route("/evaluate", web::post().to(evaluate_prompt))
             .route("/feedback", web::post().to(submit_feedback))
