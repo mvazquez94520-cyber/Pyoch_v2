@@ -28,20 +28,27 @@ async fn evaluate_prompt(
     let rule_engine = &data.rule_engine;
 
     match ai_engine.generate_business_logic(&req).await {
-        Ok(response) => {
+        Ok(mut response) => {
             // Update rule engine based on the prompt
             let rules = rule_engine.lock().unwrap().apply_rules(&req.prompt);
             
-            HttpResponse::Ok().json(EvaluationResponse {
-                rules_generated: rules,
-                ..response
-            })
+            // Generate backend and frontend previews
+            let backend_preview = ai_engine.generate_backend_preview(&req.prompt).await;
+            let frontend_preview = ai_engine.generate_frontend_preview(&req.prompt).await;
+            
+            response.rules_generated = rules;
+            response.backend_preview = Some(backend_preview);
+            response.frontend_preview = Some(frontend_preview);
+
+            HttpResponse::Ok().json(response)
         }
         Err(e) => {
             HttpResponse::InternalServerError().json(EvaluationResponse {
                 application: None,
                 generated_code: None,
                 rules_generated: vec![],
+                backend_preview: None,
+                frontend_preview: None,
                 error: Some(e.to_string()),
             })
         }

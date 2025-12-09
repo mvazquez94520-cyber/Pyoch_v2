@@ -64,6 +64,28 @@
             overflow: auto;
             font-family: monospace;
         }
+        .preview-container {
+            margin-top: 20px;
+        }
+        .preview-section {
+            margin-bottom: 20px;
+        }
+        .preview-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .preview-content {
+            width: 100%;
+            min-height: 200px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 4px;
+            overflow: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
         .feedback-section {
             margin-top: 20px;
             padding: 15px;
@@ -132,6 +154,19 @@
         
         <div id="response"></div>
         
+        <!-- Prévisualisation Backend -->
+        <div class="preview-container">
+            <div class="preview-section">
+                <div class="preview-title">Prévisualisation Backend:</div>
+                <div id="backendPreview" class="preview-content">Aperçu du backend s'affichera ici...</div>
+            </div>
+            
+            <div class="preview-section">
+                <div class="preview-title">Prévisualisation Frontend:</div>
+                <div id="frontendPreview" class="preview-content">Aperçu du frontend s'affichera ici...</div>
+            </div>
+        </div>
+        
         <div class="feedback-section">
             <h3>Feedback</h3>
             <p>Évaluez la pertinence des règles générées:</p>
@@ -166,6 +201,8 @@
         async function sendPrompt() {
             const prompt = document.getElementById('prompt').value;
             const responseDiv = document.getElementById('response');
+            const backendPreviewDiv = document.getElementById('backendPreview');
+            const frontendPreviewDiv = document.getElementById('frontendPreview');
             const sendBtn = document.getElementById('sendBtn');
             
             if (!prompt.trim()) {
@@ -177,6 +214,8 @@
             sendBtn.disabled = true;
             sendBtn.innerHTML = '<div class="loading"></div>Envoi en cours...';
             responseDiv.textContent = 'Envoi du prompt en cours...';
+            backendPreviewDiv.textContent = 'Génération de l\'aperçu backend...';
+            frontendPreviewDiv.textContent = 'Génération de l\'aperçu frontend...';
             
             try {
                 const appType = document.getElementById('appType').value;
@@ -196,10 +235,25 @@
                 } else {
                     responseDiv.textContent = JSON.stringify(result, null, 2);
                     responseDiv.className = 'response';
+                    
+                    // Display previews if available
+                    if (result.backend_preview) {
+                        backendPreviewDiv.textContent = result.backend_preview;
+                    } else {
+                        backendPreviewDiv.textContent = 'Aucun aperçu backend disponible';
+                    }
+                    
+                    if (result.frontend_preview) {
+                        frontendPreviewDiv.textContent = result.frontend_preview;
+                    } else {
+                        frontendPreviewDiv.textContent = 'Aucun aperçu frontend disponible';
+                    }
                 }
             } catch (error) {
                 responseDiv.textContent = `Erreur de connexion: ${error.message}`;
                 responseDiv.className = 'response error';
+                backendPreviewDiv.textContent = 'Erreur lors de la génération de l\'aperçu backend';
+                frontendPreviewDiv.textContent = 'Erreur lors de la génération de l\'aperçu frontend';
             } finally {
                 // Reset button state
                 sendBtn.disabled = false;
@@ -209,6 +263,8 @@
         
         function clearResponse() {
             document.getElementById('response').textContent = '';
+            document.getElementById('backendPreview').textContent = 'Aperçu du backend s\'affichera ici...';
+            document.getElementById('frontendPreview').textContent = 'Aperçu du frontend s\'affichera ici...';
             document.getElementById('prompt').value = '';
         }
         

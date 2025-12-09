@@ -1,31 +1,16 @@
 ```
 # Dependencies
-node_modules/
 .venv/
 venv/
 __pycache__/
-.mypy_cache/
-.pytest_cache/
-target/
-.gradle/
-
-# Compiled files
 *.pyc
-*.class
-*.o
-*.exe
-*.dll
-*.so
-*.a
-*.obj
-*.out
+.pytest_cache/
+.mypy_cache/
 
 # Build artifacts
+target/
 dist/
 build/
-
-# Logs
-*.log
 
 # Environment
 .env
@@ -37,22 +22,19 @@ build/
 .idea/
 *.swp
 *.swo
-*.tmp
 
-# System
-.DS_Store
-Thumbs.db
+# Logs
+*.log
 
 # Coverage
 coverage/
 htmlcov/
 .coverage
 
-# Rust specific (from Cargo.toml)
-Cargo.lock
-target/
+# OS
+.DS_Store
+Thumbs.db
 
-# Python specific
-*.pyc
-__pycache__/
+# Temp files
+*.tmp
 ```

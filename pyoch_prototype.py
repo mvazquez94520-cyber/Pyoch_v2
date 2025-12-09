@@ -65,6 +65,8 @@ class EvaluationResponse(BaseModel):
     application: Optional[Dict] = None
     generated_code: Optional[str] = None
     rules_generated: List[Dict] = []
+    backend_preview: Optional[str] = None
+    frontend_preview: Optional[str] = None
     error: Optional[str] = None
 
 class FeedbackRequest(BaseModel):
@@ -85,11 +87,92 @@ class AIEngine:
         # Simulation de réponse d'IA
         return f"Logique métier suggérée pour: {prompt}"
     
+    async def generate_backend_preview(self, prompt: str) -> str:
+        """Génère un aperçu du code backend basé sur le prompt"""
+        # Simulation de génération de code backend
+        app_type = "api" if "api" in prompt.lower() or "backend" in prompt.lower() else "web"
+        return f'''// Aperçu Backend pour: {prompt}
+// Type d'application: {app_type}
+
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+
+// Routes API simulées
+app.get('/api/data', (req, res) => {{
+  res.json({{ message: 'Données de l\\'application', prompt: '{prompt}' }});
+}});
+
+app.listen(PORT, () => {{
+  console.log(`Serveur {app_type} démarré sur le port ${{PORT}}`);
+}});
+
+// Modèles de données simulés
+class BusinessModel {{
+  constructor(data) {{
+    this.data = data;
+    this.createdAt = new Date();
+  }}
+  
+  async save() {{
+    // Logique de sauvegarde simulée
+    console.log('Données sauvegardées:', this.data);
+    return this;
+  }}
+}}
+'''
+    
+    async def generate_frontend_preview(self, prompt: str) -> str:
+        """Génère un aperçu du code frontend basé sur le prompt"""
+        # Simulation de génération de code frontend
+        framework = "React" if "react" in prompt.lower() else "HTML/JS"
+        return f'''<!-- Aperçu Frontend pour: {prompt} -->
+<!-- Framework: {framework} -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Preview - {prompt[:30]}...</title>
+  <style>
+    body {{ font-family: Arial, sans-serif; margin: 20px; }}
+    .container {{ max-width: 800px; margin: 0 auto; }}
+    .component {{ border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Application: {prompt}</h1>
+    <div class="component">
+      <h2>Interface Utilisateur</h2>
+      <p>Cette interface serait générée dynamiquement selon vos besoins métier.</p>
+      <button onclick="handleAction()">Exécuter Action</button>
+    </div>
+  </div>
+
+  <script>
+    function handleAction() {{
+      alert('Action simulée pour: {prompt}');
+    }}
+    
+    // Logique métier simulée
+    console.log('Frontend chargé pour: {prompt}');
+  </script>
+</body>
+</html>
+'''
+    
     async def generate_business_logic(self, prompt_request: PromptRequest) -> EvaluationResponse:
         try:
             generated_code = await self.call_qwen_local(prompt_request.prompt)
+            backend_preview = await self.generate_backend_preview(prompt_request.prompt)
+            frontend_preview = await self.generate_frontend_preview(prompt_request.prompt)
+            
             return EvaluationResponse(
                 generated_code=generated_code,
+                backend_preview=backend_preview,
+                frontend_preview=frontend_preview,
                 rules_generated=[],
                 error=None
             )
@@ -97,6 +180,8 @@ class AIEngine:
             return EvaluationResponse(
                 application=None,
                 generated_code=None,
+                backend_preview=None,
+                frontend_preview=None,
                 rules_generated=[],
                 error=str(e)
             )
@@ -277,6 +362,28 @@ async def read_root():
                 overflow: auto;
                 font-family: monospace;
             }
+            .preview-container {
+                margin-top: 20px;
+            }
+            .preview-section {
+                margin-bottom: 20px;
+            }
+            .preview-title {
+                font-weight: bold;
+                margin-bottom: 10px;
+                color: #333;
+            }
+            .preview-content {
+                width: 100%;
+                min-height: 200px;
+                border: 1px solid #ccc;
+                padding: 15px;
+                background-color: #f0f8ff;
+                border-radius: 4px;
+                overflow: auto;
+                font-family: monospace;
+                white-space: pre-wrap;
+            }
             .feedback-section {
                 margin-top: 20px;
                 padding: 15px;
@@ -332,6 +439,19 @@ async def read_root():
             
             <div id="response"></div>
             
+            <!-- Prévisualisation Backend -->
+            <div class="preview-container">
+                <div class="preview-section">
+                    <div class="preview-title">Prévisualisation Backend:</div>
+                    <div id="backendPreview" class="preview-content">Aperçu du backend s'affichera ici...</div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="preview-title">Prévisualisation Frontend:</div>
+                    <div id="frontendPreview" class="preview-content">Aperçu du frontend s'affichera ici...</div>
+                </div>
+            </div>
+            
             <div class="feedback-section">
                 <h3>Feedback</h3>
                 <p>Évaluez la pertinence des règles générées:</p>
@@ -366,6 +486,8 @@ async def read_root():
             async function sendPrompt() {
                 const prompt = document.getElementById('prompt').value;
                 const responseDiv = document.getElementById('response');
+                const backendPreviewDiv = document.getElementById('backendPreview');
+                const frontendPreviewDiv = document.getElementById('frontendPreview');
                 const sendBtn = document.getElementById('sendBtn');
                 
                 if (!prompt.trim()) {
@@ -377,6 +499,8 @@ async def read_root():
                 sendBtn.disabled = true;
                 sendBtn.innerHTML = '<div class="loading"></div>Envoi en cours...';
                 responseDiv.textContent = 'Envoi du prompt en cours...';
+                backendPreviewDiv.textContent = 'Génération de l\'aperçu backend...';
+                frontendPreviewDiv.textContent = 'Génération de l\'aperçu frontend...';
                 
                 try {
                     const appType = document.getElementById('appType').value;
@@ -394,9 +518,24 @@ async def read_root():
                         responseDiv.textContent = `Erreur: ${result.error}`;
                     } else {
                         responseDiv.textContent = JSON.stringify(result, null, 2);
+                        
+                        // Afficher les aperçus si disponibles
+                        if (result.backend_preview) {
+                            backendPreviewDiv.textContent = result.backend_preview;
+                        } else {
+                            backendPreviewDiv.textContent = 'Aucun aperçu backend disponible';
+                        }
+                        
+                        if (result.frontend_preview) {
+                            frontendPreviewDiv.textContent = result.frontend_preview;
+                        } else {
+                            frontendPreviewDiv.textContent = 'Aucun aperçu frontend disponible';
+                        }
                     }
                 } catch (error) {
                     responseDiv.textContent = `Erreur de connexion: ${error.message}`;
+                    backendPreviewDiv.textContent = 'Erreur lors de la génération de l\'aperçu backend';
+                    frontendPreviewDiv.textContent = 'Erreur lors de la génération de l\'aperçu frontend';
                 } finally {
                     // Réinitialiser l'état du bouton
                     sendBtn.disabled = false;
@@ -406,6 +545,8 @@ async def read_root():
             
             function clearResponse() {
                 document.getElementById('response').textContent = '';
+                document.getElementById('backendPreview').textContent = 'Aperçu du backend s\'affichera ici...';
+                document.getElementById('frontendPreview').textContent = 'Aperçu du frontend s\'affichera ici...';
                 document.getElementById('prompt').value = '';
             }
             
