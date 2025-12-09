@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PYOCH - Générateur d'Applications Métiers</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #333; 
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #prompt { 
+            width: 100%; 
+            height: 100px; 
+            margin-bottom: 10px; 
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button { 
+            padding: 12px 24px; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #response { 
+            width: 100%; 
+            min-height: 300px; 
+            border: 1px solid #ccc; 
+            padding: 15px; 
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            overflow: auto;
+            font-family: monospace;
+        }
+        .feedback-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 4px;
+        }
+        .app-type-selector {
+            margin-bottom: 20px;
+        }
+        .app-type-selector label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .app-type-selector select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .status.success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PYOCH - Générateur d'Applications Métiers</h1>
+        
+        <div class="app-type-selector">
+            <label for="appType">Type d'application métier:</label>
+            <select id="appType">
+                <option value="">Sélectionnez un type d'application</option>
+            </select>
+        </div>
+        
+        <textarea id="prompt" placeholder="Décrivez votre besoin métier..."></textarea>
+        
+        <div class="button-group">
+            <button id="sendBtn" onclick="sendPrompt()">Envoyer</button>
+            <button id="clearBtn" onclick="clearResponse()">Effacer</button>
+        </div>
+        
+        <div id="response"></div>
+        
+        <div class="feedback-section">
+            <h3>Feedback</h3>
+            <p>Évaluez la pertinence des règles générées:</p>
+            <button onclick="submitFeedback(true)">Pertinent</button>
+            <button onclick="submitFeedback(false)">Non pertinent</button>
+        </div>
+    </div>
+
+    <script>
+        // Load application types on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAppTypes();
+        });
+        
+        async function loadAppTypes() {
+            try {
+                const response = await fetch('http://localhost:3030/app-types');
+                const appTypes = await response.json();
+                
+                const select = document.getElementById('appType');
+                appTypes.forEach(appType => {
+                    const option = document.createElement('option');
+                    option.value = appType.type;
+                    option.textContent = appType.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading app types:', error);
+            }
+        }
+        
+        async function sendPrompt() {
+            const prompt = document.getElementById('prompt').value;
+            const responseDiv = document.getElementById('response');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (!prompt.trim()) {
+                alert('Veuillez entrer un prompt');
+                return;
+            }
+            
+            // Show loading state
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<div class="loading"></div>Envoi en cours...';
+            responseDiv.textContent = 'Envoi du prompt en cours...';
+            
+            try {
+                const appType = document.getElementById('appType').value;
+                const fullPrompt = appType ? `[${appType.toUpperCase()}] ${prompt}` : prompt;
+                
+                const response = await fetch('http://localhost:3030/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: fullPrompt }),
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    responseDiv.innerHTML = `Erreur: ${result.error}`;
+                    responseDiv.className = 'response error';
+                } else {
+                    responseDiv.textContent = JSON.stringify(result, null, 2);
+                    responseDiv.className = 'response';
+                }
+            } catch (error) {
+                responseDiv.textContent = `Erreur de connexion: ${error.message}`;
+                responseDiv.className = 'response error';
+            } finally {
+                // Reset button state
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Envoyer';
+            }
+        }
+        
+        function clearResponse() {
+            document.getElementById('response').textContent = '';
+            document.getElementById('prompt').value = '';
+        }
+        
+        async function submitFeedback(isRelevant) {
+            const responseDiv = document.getElementById('response');
+            if (!responseDiv.textContent) {
+                alert('Veuillez d\'abord générer une réponse avant de fournir un feedback');
+                return;
+            }
+            
+            try {
+                // In a real implementation, we would send the actual feedback data
+                // For now, we're just sending a simple feedback structure
+                const feedbackResponse = await fetch('http://localhost:3030/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        rule_id: "placeholder-rule-id", // In a real app, this would be the actual rule ID
+                        is_relevant: isRelevant,
+                        user_comment: isRelevant ? "Règle pertinente" : "Règle non pertinente",
+                        timestamp: new Date().toISOString()
+                    }),
+                });
+                
+                const result = await feedbackResponse.json();
+                alert(`Feedback ${isRelevant ? 'positif' : 'négatif'} envoyé: ${result.status}`);
+            } catch (error) {
+                alert(`Erreur lors de l'envoi du feedback: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
