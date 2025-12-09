@@ -29,6 +29,7 @@ Le projet est structuré de la manière suivante :
 - Intégration avec des modèles d'IA locaux (QWEN, Mistral)
 - Système de feedback pour l'auto-apprentissage
 - Interface web intuitive
+- **Nouveau** : Prévisualisation des applications Backend et Frontend avant génération finale
 
 ## Versions Disponibles
 
@@ -99,10 +100,12 @@ ollama serve
 ## API Endpoints
 
 - `GET /health` - Vérifie l'état de santé de l'application
-- `POST /evaluate` - Évalue un prompt métier et génère une réponse
+- `POST /evaluate` - Évalue un prompt métier et génère une réponse (incluant les aperçus Backend et Frontend)
 - `POST /feedback` - Soumet un feedback sur une règle générée
 - `GET /app-types` - Récupère les types d'applications disponibles
-- `GET /` - Interface web principale
+- `GET /` - Interface web principale avec affichage des aperçus
+
+L'endpoint `/evaluate` a été étendu pour inclure les champs `backend_preview` et `frontend_preview` dans la réponse, permettant la prévisualisation avant la génération finale.
 
 ## Utilisation
 
@@ -110,7 +113,9 @@ ollama serve
 2. Sélectionnez un type d'application métier
 3. Décrivez votre besoin dans le champ de texte
 4. Cliquez sur "Envoyer" pour générer l'application
-5. Évaluez la pertinence des résultats et fournissez un feedback
+5. Visualisez les aperçus Backend et Frontend dans les sections dédiées
+6. Évaluez la pertinence des résultats et fournissez un feedback
+7. Utilisez les aperçus pour valider la direction du développement avant la génération finale
 
 ## Auto-apprentissage
 

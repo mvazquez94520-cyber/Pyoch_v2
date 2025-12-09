@@ -44,5 +44,7 @@ pub struct EvaluationResponse {
     pub application: Option<BusinessApplication>,
     pub generated_code: Option<String>,
     pub rules_generated: Vec<Rule>,
+    pub backend_preview: Option<String>,
+    pub frontend_preview: Option<String>,
     pub error: Option<String>,
 }
