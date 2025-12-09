@@ -1,0 +1,12 @@
+Number,Name,Position,Role,Fitness_Score,Overall_Rating,Current_Form,Injury_Risk
+1,Thibaut Courtois,GK,Starting GK,8.74,92,8.7,0.1
+2,Virgil van Dijk,DEF,Center-back,8.6,89,8.5,0.15
+3,Trent Alexander-Arnold,DEF,Right-back,7.97,87,7.5,0.2
+4,Andrew Robertson,DEF,Left-back,7.97,88,7.5,0.2
+5,Joel Matip,DEF,Sweeper,7.97,82,7.5,0.2
+6,Fabinho,MID,Defensive Mid,7.97,84,7.5,0.2
+7,Jordan Henderson,MID,Central Mid,7.97,83,7.5,0.2
+8,Alexis Mac Allister,MID,Attacking Mid,7.97,85,7.5,0.2
+9,Mohamed Salah,FWD,Striker,8.32,90,9.0,0.25
+10,Darwin Núñez,FWD,Second Striker,7.97,83,7.5,0.2
+11,Luis Díaz,FWD,Winger,7.97,86,7.5,0.2
