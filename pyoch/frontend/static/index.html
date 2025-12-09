@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PYOCH - Générateur d'Applications Métiers</title>
+    <title>PYOCH - Page Simple</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -114,55 +114,17 @@
 </head>
 <body>
     <div class="container">
-        <h1>PYOCH - Générateur d'Applications Métiers</h1>
+        <h1>PYOCH - Générateur d'Applications</h1>
         
-        <div class="app-type-selector">
-            <label for="appType">Type d'application métier:</label>
-            <select id="appType">
-                <option value="">Sélectionnez un type d'application</option>
-            </select>
-        </div>
+        <textarea id="prompt" placeholder="Entrez votre prompt ici..."></textarea>
         
-        <textarea id="prompt" placeholder="Décrivez votre besoin métier..."></textarea>
-        
-        <div class="button-group">
-            <button id="sendBtn" onclick="sendPrompt()">Envoyer</button>
-            <button id="clearBtn" onclick="clearResponse()">Effacer</button>
-        </div>
+        <button id="sendBtn" onclick="sendPrompt()">Générer</button>
+        <button id="clearBtn" onclick="clearResponse()">Effacer</button>
         
         <div id="response"></div>
-        
-        <div class="feedback-section">
-            <h3>Feedback</h3>
-            <p>Évaluez la pertinence des règles générées:</p>
-            <button onclick="submitFeedback(true)">Pertinent</button>
-            <button onclick="submitFeedback(false)">Non pertinent</button>
-        </div>
     </div>
 
     <script>
-        // Load application types on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadAppTypes();
-        });
-        
-        async function loadAppTypes() {
-            try {
-                const response = await fetch('http://localhost:3030/app-types');
-                const appTypes = await response.json();
-                
-                const select = document.getElementById('appType');
-                appTypes.forEach(appType => {
-                    const option = document.createElement('option');
-                    option.value = appType.type;
-                    option.textContent = appType.name;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading app types:', error);
-            }
-        }
-        
         async function sendPrompt() {
             const prompt = document.getElementById('prompt').value;
             const responseDiv = document.getElementById('response');
@@ -175,17 +137,14 @@
             
             // Show loading state
             sendBtn.disabled = true;
-            sendBtn.innerHTML = '<div class="loading"></div>Envoi en cours...';
-            responseDiv.textContent = 'Envoi du prompt en cours...';
+            sendBtn.innerHTML = '<div class="loading"></div>Génération en cours...';
+            responseDiv.textContent = 'Génération en cours...';
             
             try {
-                const appType = document.getElementById('appType').value;
-                const fullPrompt = appType ? `[${appType.toUpperCase()}] ${prompt}` : prompt;
-                
                 const response = await fetch('http://localhost:3030/evaluate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: fullPrompt }),
+                    body: JSON.stringify({ prompt: prompt }),
                 });
                 
                 const result = await response.json();
@@ -203,41 +162,13 @@
             } finally {
                 // Reset button state
                 sendBtn.disabled = false;
-                sendBtn.textContent = 'Envoyer';
+                sendBtn.textContent = 'Générer';
             }
         }
         
         function clearResponse() {
             document.getElementById('response').textContent = '';
             document.getElementById('prompt').value = '';
-        }
-        
-        async function submitFeedback(isRelevant) {
-            const responseDiv = document.getElementById('response');
-            if (!responseDiv.textContent) {
-                alert('Veuillez d\'abord générer une réponse avant de fournir un feedback');
-                return;
-            }
-            
-            try {
-                // In a real implementation, we would send the actual feedback data
-                // For now, we're just sending a simple feedback structure
-                const feedbackResponse = await fetch('http://localhost:3030/feedback', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        rule_id: "placeholder-rule-id", // In a real app, this would be the actual rule ID
-                        is_relevant: isRelevant,
-                        user_comment: isRelevant ? "Règle pertinente" : "Règle non pertinente",
-                        timestamp: new Date().toISOString()
-                    }),
-                });
-                
-                const result = await feedbackResponse.json();
-                alert(`Feedback ${isRelevant ? 'positif' : 'négatif'} envoyé: ${result.status}`);
-            } catch (error) {
-                alert(`Erreur lors de l'envoi du feedback: ${error.message}`);
-            }
         }
     </script>
 </body>

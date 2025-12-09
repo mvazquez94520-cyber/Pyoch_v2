@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PYOCH - Page Simple</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #333; 
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #prompt { 
+            width: 100%; 
+            height: 150px; 
+            margin-bottom: 20px; 
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            resize: vertical;
+        }
+        #generateBtn { 
+            padding: 15px 30px; 
+            background-color: #28a745; 
+            color: white; 
+            border: none; 
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            display: block;
+            margin: 0 auto 20px;
+        }
+        #generateBtn:hover {
+            background-color: #218838;
+        }
+        #generateBtn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #response { 
+            width: 100%; 
+            min-height: 200px; 
+            border: 1px solid #ccc; 
+            padding: 15px; 
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            overflow: auto;
+            display: none;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #28a745;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PYOCH - Générateur d'Applications</h1>
+        
+        <textarea id="prompt" placeholder="Entrez votre prompt ici..."></textarea>
+        
+        <button id="generateBtn" onclick="generateContent()">Générer</button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Génération en cours...</p>
+        </div>
+        
+        <pre id="response"></pre>
+    </div>
+
+    <script>
+        async function generateContent() {
+            const prompt = document.getElementById('prompt').value;
+            const responseDiv = document.getElementById('response');
+            const generateBtn = document.getElementById('generateBtn');
+            const loadingDiv = document.getElementById('loading');
+            
+            if (!prompt.trim()) {
+                alert('Veuillez entrer un prompt');
+                return;
+            }
+            
+            // Show loading, hide response
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Génération...';
+            loadingDiv.style.display = 'block';
+            responseDiv.style.display = 'none';
+            responseDiv.textContent = '';
+            
+            try {
+                // Make API call to backend
+                const response = await fetch('http://localhost:3030/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt }),
+                });
+                
+                const result = await response.json();
+                
+                // Hide loading, show response
+                loadingDiv.style.display = 'none';
+                responseDiv.style.display = 'block';
+                
+                if (result.error) {
+                    responseDiv.textContent = `Erreur: ${result.error}`;
+                    responseDiv.style.backgroundColor = '#ffebee';
+                } else {
+                    responseDiv.textContent = JSON.stringify(result, null, 2);
+                    responseDiv.style.backgroundColor = '#f0f8ff';
+                }
+            } catch (error) {
+                // Hide loading, show response
+                loadingDiv.style.display = 'none';
+                responseDiv.style.display = 'block';
+                responseDiv.textContent = `Erreur de connexion: ${error.message}`;
+                responseDiv.style.backgroundColor = '#ffebee';
+            } finally {
+                // Reset button state
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Générer';
+            }
+        }
+    </script>
+</body>
+</html>
